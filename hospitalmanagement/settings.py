@@ -79,10 +79,16 @@ WSGI_APPLICATION = 'hospitalmanagement.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'E_hospital_db',
+        'USER': 'root',
+        'PASSWORD': 'imran123',
+        'HOST': 'localhost',  # Or your MySQL server IP Address
+        'PORT': '3306',       # MySQL default port
     }
 }
+
+
 
 
 # Password validation
