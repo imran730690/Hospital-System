@@ -76,5 +76,20 @@ class PatientDischargeDetails(models.Model):
     OtherCharge=models.PositiveIntegerField(null=False)
     total=models.PositiveIntegerField(null=False)
 
+    PAYMENT_STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('PAID', 'Paid'),
+        ('PARTIAL', 'Partial Payment'),
+    ]
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='PENDING')
+    
+    def get_payment_url(self):
+        from django.urls import reverse
+        return reverse('payment', kwargs={'discharge_id': self.id})
 
 
+class Payment(models.Model):
+    discharge_details = models.ForeignKey(PatientDischargeDetails, on_delete=models.CASCADE)
+    amount = models.PositiveIntegerField()
+    stripe_charge_id = models.CharField(max_length=50)
+    timestamp = models.DateTimeField(auto_now_add=True)

@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render,redirect,reverse
 from . import forms,models
 from django.db.models import Sum
@@ -8,6 +9,9 @@ from django.contrib.auth.decorators import login_required,user_passes_test
 from datetime import datetime,timedelta,date
 from django.conf import settings
 from django.db.models import Q
+from django.http.response import JsonResponse # new
+from django.views.decorators.csrf import csrf_exempt # new
+import stripe
 
 # Create your views here.
 def home_view(request):
@@ -812,9 +816,38 @@ def patient_discharge_view(request):
 #---------------------------------------------------------------------------------
 
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
+@csrf_exempt
+def create_checkout_session(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            amount = int(float(data['amount']) * 100)  # Convert to cents
+        except (json.JSONDecodeError, KeyError, ValueError):
+            return JsonResponse({'error': 'Invalid request'}, status=400)
 
-
+        YOUR_DOMAIN = "http://127.0.0.1:8000"
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'inr',
+                    'product_data': {
+                        'name': 'Hospital Bill',
+                    },
+                    'unit_amount': amount,  # Use the dynamic amount
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=YOUR_DOMAIN + '/success/',
+            cancel_url=YOUR_DOMAIN + '/cancel/',
+        )
+        return JsonResponse({
+            'id': session.id
+        })
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
 
@@ -840,7 +873,3 @@ def contactus_view(request):
 #---------------------------------------------------------------------------------
 #------------------------ ADMIN RELATED VIEWS END ------------------------------
 #---------------------------------------------------------------------------------
-
-
-
-
